@@ -7,6 +7,12 @@
 .buildlog/
 .history
 
+# Codex CLI
+.codex/
+.codex_history/
+.codex_plan.json
+codex.log
+
 
 
 # Flutter repo-specific
