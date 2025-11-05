@@ -55,6 +55,22 @@ class LeftDrawer extends StatelessWidget {
             },
           ),
           ListTile(
+            leading: const Icon(Icons.article_outlined),
+            title: const Text('See News'),
+            onTap: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(
+                  const SnackBar(
+                    content: Text('Kamu telah memilih menu See News'),
+                    behavior: SnackBarBehavior.floating,
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+            },
+          ),
+          ListTile(
             leading: const Icon(Icons.post_add),
             title: const Text('Add News'),
             onTap: () {
