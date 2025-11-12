@@ -1,5 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:football_news/screens/menu.dart';
+import 'package:football_news/utils/constants.dart';
 import 'package:football_news/widgets/left_drawer.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
 
 class NewsFormPage extends StatefulWidget {
   const NewsFormPage({super.key});
@@ -18,6 +24,7 @@ class _NewsFormPageState extends State<NewsFormPage> {
   String _category = _defaultCategory;
   String _thumbnail = '';
   bool _isFeatured = false;
+  bool _isSubmitting = false;
 
   final List<String> _categories = const [
     'transfer',
@@ -28,58 +35,64 @@ class _NewsFormPageState extends State<NewsFormPage> {
     'analysis',
   ];
 
-  void _resetForm() {
-    _formKey.currentState!.reset();
-    setState(() {
-      _title = '';
-      _content = '';
-      _category = _defaultCategory;
-      _thumbnail = '';
-      _isFeatured = false;
-    });
-  }
-
-  void _handleSubmit() {
+  Future<void> _handleSubmit() async {
+    if (_isSubmitting) return;
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
-    showDialog<void>(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Berita berhasil disimpan!'),
-          content: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _DialogRow(label: 'Judul', value: _title),
-                _DialogRow(label: 'Isi', value: _content),
-                _DialogRow(label: 'Kategori', value: _category),
-                _DialogRow(
-                  label: 'Thumbnail',
-                  value: _thumbnail.isEmpty ? '-' : _thumbnail,
-                ),
-                _DialogRow(
-                  label: 'Unggulan',
-                  value: _isFeatured ? 'Ya' : 'Tidak',
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _resetForm();
-              },
-              child: const Text('OK'),
-            ),
-          ],
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    final request = context.read<CookieRequest>();
+
+    try {
+      final response = await request.postJson(
+        '$baseUrl/create-news-flutter/',
+        jsonEncode({
+          "title": _title,
+          "content": _content,
+          "thumbnail": _thumbnail,
+          "category": _category,
+          "is_featured": _isFeatured,
+        }),
+      );
+
+      if (!mounted) return;
+
+      if (response['status'] == 'success') {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(
+            const SnackBar(content: Text("News successfully saved!")));
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const MyHomePage()),
         );
-      },
-    );
+      } else {
+        final error =
+            response['message'] ?? "Something went wrong, please try again.";
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(error)));
+      }
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Unable to submit data to the server. Please retry.\nDetail: $error',
+          ),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
   }
 
   @override
@@ -208,7 +221,7 @@ class _NewsFormPageState extends State<NewsFormPage> {
               Align(
                 alignment: Alignment.centerRight,
                 child: ElevatedButton(
-                  onPressed: _handleSubmit,
+                  onPressed: _isSubmitting ? null : _handleSubmit,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Theme.of(context).colorScheme.primary,
                     foregroundColor: Colors.white,
@@ -217,40 +230,21 @@ class _NewsFormPageState extends State<NewsFormPage> {
                       vertical: 14,
                     ),
                   ),
-                  child: const Text('Simpan'),
+                  child: _isSubmitting
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      : const Text('Simpan'),
                 ),
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _DialogRow extends StatelessWidget {
-  const _DialogRow({
-    required this.label,
-    required this.value,
-  });
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: RichText(
-        text: TextSpan(
-          style: Theme.of(context).textTheme.bodyMedium,
-          children: [
-            TextSpan(
-              text: '$label: ',
-              style: const TextStyle(fontWeight: FontWeight.w600),
-            ),
-            TextSpan(text: value),
-          ],
         ),
       ),
     );

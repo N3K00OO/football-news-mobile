@@ -123,3 +123,15 @@ app.*.symbols
 !**/ios/**/default.perspectivev3
 !/packages/flutter_tools/test/data/dart_dependencies_test/**/.packages
 !/dev/ci/**/Gemfile.lock
+
+# Django backend
+football-news/.env*
+football-news/.venv/
+football-news/env/
+football-news/venv/
+football-news/env.bak/
+football-news/venv.bak/
+football-news/db.sqlite3
+football-news/media/
+football-news/**/*.pyc
+football-news/**/__pycache__/

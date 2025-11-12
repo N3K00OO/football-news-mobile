@@ -3,6 +3,10 @@ import 'package:football_news/models/menu_item.dart';
 import 'package:football_news/screens/news_form_page.dart';
 import 'package:football_news/widgets/left_drawer.dart';
 import 'package:football_news/widgets/news_card.dart';
+import 'package:football_news/utils/constants.dart';
+import 'package:football_news/utils/routes.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
 
 class MyHomePage extends StatelessWidget {
   const MyHomePage({super.key});
@@ -37,7 +41,9 @@ class MyHomePage extends StatelessWidget {
     ),
   ];
 
-  void _handleMenuTap(BuildContext context, MenuItemData item) {
+  Future<void> _handleMenuTap(BuildContext context, MenuItemData item) async {
+    final request = context.read<CookieRequest>();
+
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
@@ -48,13 +54,42 @@ class MyHomePage extends StatelessWidget {
         ),
       );
 
-    if (item.action == MenuAction.addNews) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const NewsFormPage(),
-        ),
-      );
+    switch (item.action) {
+      case MenuAction.viewNews:
+        Navigator.pushNamed(context, newsListRoute);
+        break;
+      case MenuAction.addNews:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const NewsFormPage()),
+        );
+        break;
+      case MenuAction.logout:
+        final response = await request.logout('$baseUrl/auth/logout/');
+        if (!context.mounted) return;
+
+        if (response['status'] == true) {
+          final username = response['username'] ?? 'user';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '${response['message'] ?? 'Logged out successfully!'} '
+                'See you again, $username.',
+              ),
+            ),
+          );
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            loginRoute,
+            (route) => false,
+          );
+        } else {
+          final error = response['message'] ?? 'Logout failed.';
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(error)));
+        }
+        break;
     }
   }
 
@@ -64,10 +99,7 @@ class MyHomePage extends StatelessWidget {
       appBar: AppBar(
         title: const Text(
           'Football News',
-          style: TextStyle(
-            fontSize: 26,
-            fontWeight: FontWeight.w700,
-          ),
+          style: TextStyle(fontSize: 26, fontWeight: FontWeight.w700),
         ),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Colors.white,
@@ -87,19 +119,13 @@ class MyHomePage extends StatelessWidget {
                 const Text(
                   'Selamat datang di Football News',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 16),
                 const Text(
                   'Dapatkan kabar terkini, transfer terbaru, dan cerita eksklusif seputar dunia sepak bola favoritmu.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.black54,
-                  ),
+                  style: TextStyle(fontSize: 16, color: Colors.black54),
                 ),
                 const SizedBox(height: 36),
                 _MenuSection(
@@ -150,13 +176,10 @@ class _ProfileSection extends StatelessWidget {
 }
 
 class _MenuSection extends StatelessWidget {
-  const _MenuSection({
-    required this.isNarrow,
-    required this.onTap,
-  });
+  const _MenuSection({required this.isNarrow, required this.onTap});
 
   final bool isNarrow;
-  final ValueChanged<MenuItemData> onTap;
+  final Future<void> Function(MenuItemData) onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -164,7 +187,9 @@ class _MenuSection extends StatelessWidget {
         .map(
           (item) => NewsCard(
             item: item,
-            onTap: () => onTap(item),
+            onTap: () {
+              onTap(item);
+            },
           ),
         )
         .toList();
@@ -193,11 +218,7 @@ class _MenuSection extends StatelessWidget {
 }
 
 class InfoCard extends StatelessWidget {
-  const InfoCard({
-    super.key,
-    required this.label,
-    required this.value,
-  });
+  const InfoCard({super.key, required this.label, required this.value});
 
   final String label;
   final String value;
@@ -206,9 +227,7 @@ class InfoCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         child: Column(
@@ -218,19 +237,13 @@ class InfoCard extends StatelessWidget {
             Text(
               label,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 10),
             Text(
               value,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w400,
-              ),
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w400),
             ),
           ],
         ),

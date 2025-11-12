@@ -31,6 +31,14 @@ Aplikasi Flutter yang menyajikan beragam menu terkait berita sepak bola. Halaman
 6. **Konsep hot reload vs hot restart**  
    Hot reload menyuntikkan perubahan kode ke VM dan mencoba mempertahankan state aplikasi yang sedang berjalan; cocok untuk iterasi UI yang cepat. Hot restart memulai ulang aplikasi sepenuhnya, sehingga state kembali ke kondisi awal. Gunakan hot reload ketika ingin melihat perubahan visual tanpa kehilangan data sementara, sedangkan hot restart diperlukan apabila perubahan menyentuh inisialisasi global atau terjadi inkonsistensi state.
 
+## Checklist Tutorial 8
+
+- **Model & provider siap pakai** — `lib/models/news_entry.dart` mendeskripsikan struktur respons dari endpoint JSON Django, sedangkan `lib/main.dart` membungkus aplikasi dengan `Provider<CookieRequest>` agar semua halaman dapat berbagi sesi autentikasi.
+- **Autentikasi penuh Django** — `lib/screens/login_page.dart` dan `lib/screens/register_page.dart` memanggil endpoint `/auth/login/` dan `/auth/register/` Django menggunakan `pbp_django_auth`, dilengkapi validasi input, indikator pemrosesan, serta snackbar hasil operasi. Logout tersedia di `lib/screens/menu.dart` serta `lib/widgets/left_drawer.dart` melalui endpoint `/auth/logout/`.
+- **Pengambilan dan penampilan data** — `lib/screens/news_entry_list.dart` menggunakan `FutureBuilder` untuk mengambil data dari `$baseUrl/json/`, menampilkan daftar kartu berita interaktif (`lib/widgets/news_entry_card.dart`), serta menangani kasus gagal koneksi dengan tombol retry.
+- **Halaman detail berita** — `lib/screens/news_detail.dart` menampilkan informasi lengkap (kategori, tanggal, jumlah views, thumbnail yang diproksi melalui Django) sesuai struktur model pada backend.
+- **Form input terintegrasi** — `lib/screens/news_form_page.dart` mengirim news baru ke endpoint Django `/create-news-flutter/` dalam format JSON. Form memuat validasi, dropdown kategori, switch featured, serta indikator loading agar pengguna tahu ketika data sedang dikirim.
+
 ## Menjalankan Proyek
 
 ```bash

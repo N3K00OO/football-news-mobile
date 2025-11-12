@@ -1,13 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:football_news/screens/menu.dart';
 import 'package:football_news/screens/news_form_page.dart';
+import 'package:football_news/utils/constants.dart';
+import 'package:football_news/utils/routes.dart';
+import 'package:pbp_django_auth/pbp_django_auth.dart';
+import 'package:provider/provider.dart';
 
 class LeftDrawer extends StatelessWidget {
   const LeftDrawer({super.key});
 
+  Future<void> _logout(BuildContext context, CookieRequest request) async {
+    Navigator.pop(context);
+    final response = await request.logout('$baseUrl/auth/logout/');
+
+    if (!context.mounted) return;
+
+    if (response['status'] == true) {
+      final username = response['username'] ?? 'user';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${response['message'] ?? 'Logged out successfully!'} '
+            'See you again, $username.',
+          ),
+        ),
+      );
+      Navigator.pushNamedAndRemoveUntil(context, loginRoute, (route) => false);
+    } else {
+      final error = response['message'] ?? 'Logout failed.';
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(error)));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).colorScheme.primary;
+    final request = context.read<CookieRequest>();
 
     return Drawer(
       child: ListView(
@@ -48,26 +78,16 @@ class LeftDrawer extends StatelessWidget {
               Navigator.pop(context);
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const MyHomePage(),
-                ),
+                MaterialPageRoute(builder: (context) => const MyHomePage()),
               );
             },
           ),
           ListTile(
             leading: const Icon(Icons.article_outlined),
-            title: const Text('See News'),
+            title: const Text('News List'),
             onTap: () {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  const SnackBar(
-                    content: Text('Kamu telah memilih menu See News'),
-                    behavior: SnackBarBehavior.floating,
-                    duration: Duration(seconds: 2),
-                  ),
-                );
+              Navigator.pushNamed(context, newsListRoute);
             },
           ),
           ListTile(
@@ -77,10 +97,16 @@ class LeftDrawer extends StatelessWidget {
               Navigator.pop(context);
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const NewsFormPage(),
-                ),
+                MaterialPageRoute(builder: (context) => const NewsFormPage()),
               );
+            },
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.logout_rounded),
+            title: const Text('Logout'),
+            onTap: () {
+              _logout(context, request);
             },
           ),
         ],

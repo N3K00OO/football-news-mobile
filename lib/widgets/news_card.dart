@@ -2,11 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:football_news/models/menu_item.dart';
 
 class NewsCard extends StatelessWidget {
-  const NewsCard({
-    super.key,
-    required this.item,
-    required this.onTap,
-  });
+  const NewsCard({super.key, required this.item, required this.onTap});
 
   final MenuItemData item;
   final VoidCallback onTap;
@@ -37,11 +33,7 @@ class NewsCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                item.icon,
-                color: Colors.white,
-                size: 32,
-              ),
+              Icon(item.icon, color: Colors.white, size: 32),
               const SizedBox(height: 12),
               Text(
                 item.title,

@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum MenuAction {
-  viewNews,
-  addNews,
-  logout,
-}
+enum MenuAction { viewNews, addNews, logout }
 
 class MenuItemData {
   const MenuItemData({
