@@ -135,3 +135,8 @@ football-news/db.sqlite3
 football-news/media/
 football-news/**/*.pyc
 football-news/**/__pycache__/
+
+# Remember to never publicly share your keystore.
+# See https://flutter.dev/docs/deployment/android#reference-the-keystore-from-the-app
+*.keystore
+*.jks
